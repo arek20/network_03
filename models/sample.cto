@@ -1,0 +1,153 @@
+/**
+ * Sample business network definition.
+ */
+namespace org.acme.sample
+
+asset SampleAsset identified by assetId {
+  o String assetId
+  --> SampleParticipant owner
+  o String value
+}
+
+participant SampleParticipant identified by participantId {
+  o String participantId
+  o String firstName
+  o String lastName
+}
+
+transaction SampleTransaction identified by transactionId {
+  o String transactionId
+  --> SampleAsset asset
+  o String newValue
+}
+
+event SampleEvent identified by eventId {
+  o String eventId
+  --> SampleAsset asset
+  o String oldValue
+  o String newValue
+}
+
+/** Updated code, network_03, BELOW */
+
+/**
+ * A concept for a simple street address
+ */
+concept Address {
+  o String street
+  o String city 
+  o String state optional
+  o String country 
+  o String zip optional
+}
+
+/**
+ * A Customs Agency is a type of participant in the network
+ */
+participant CustomsParticipant identified by customsId {
+    o String customsId
+    o String agencyName
+    o String country 
+}
+
+/**
+ * A Transporter is a transportation provider type of participant in the network
+ */
+participant LogisticsParticipant identified by logisticsId {
+  o String logisticsId
+  o String logisticsName
+  o Address address
+  o String email
+}
+
+/**
+ * An abstract participant type in this business network
+ */
+abstract participant Business identified by email {
+  o String email
+  o String contactName
+  o String companyName optional
+  o String tax_Id
+  o Address address
+}
+
+/**
+ * A Shipper is a type of participant in the network
+ */
+participant ShipperParticipant extends Business {
+}
+
+/**
+ * An Importer is a type of participant in the network
+ */
+participant ImporterParticipant extends Business {
+}
+
+/**
+ * Defines a Invoice between a Shipper, Customs and an Importer to ship using
+ * a Transporter. Inovice is being tracked as an asset on the ledger.
+ */
+asset Invoice identified by invoiceId {
+  o String invoiceId
+  --> CustomsParticipant customs
+  --> ShipperParticipant shipper
+  --> ImporterParticipant importer
+  --> LogisticsParticipant logistics
+  o String invoiceNo
+  o String wayBillNo
+  o String dateYYYYMMDD
+  o Integer goodsUnits
+  o String goodsDescription
+  o Double goodsUnitValue
+  o Double goodsTotalValue
+  o Integer noOfPackages
+  o String Currency
+  o Double totalWeight
+}
+
+/**
+ * The Customs status
+ */
+enum CustomsStatus {
+  o UNCLEARED
+  o CLEARED
+  o REJECTED
+}
+
+/**
+ * A shipment being tracked as an asset on the ledger
+ */
+asset Shipment identified by shipmentId {
+  o String shipmentId
+  o CustomsStatus customsStatus
+  --> Invoice invoice
+}
+
+/**
+ * An abstract transaction that is related to a Shipment
+ */
+abstract transaction ShipmentTransaction identified by transactionId {
+    o String transactionId
+    --> Shipment shipment
+}
+
+/**
+ * A notification that a shipment has been assessed by Customs.
+ */
+transaction ShipmentCustomsReview extends ShipmentTransaction {
+  o CustomsStatus reviewStatus // new Customs Status after the Customs review
+}
+
+event CustomsEvent identified by eventId {
+  o String eventId
+  --> Shipment shipment
+  o CustomsStatus oldCustomsStatus
+  o CustomsStatus newCustomsStatus
+}
+
+/**
+ * JUST FOR INITIALIZING A DEMO
+ */
+transaction SetupDemo identified by transactionId {
+  o String transactionId
+}
